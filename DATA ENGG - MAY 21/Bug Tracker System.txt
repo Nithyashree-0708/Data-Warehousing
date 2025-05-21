@@ -1,0 +1,52 @@
+Bug Tracker System
+
+Database: bugtracker
+Collection: bugs
+
+------Task 1: Create a new database:------
+
+use bugtracker
+
+------Task 2: Insert 3 bug reports into bugs collection:------
+
+db.bugs.insertMany([
+  {
+    title: "Login button unresponsive",
+    reportedBy: "Vivek",
+    status: "open",
+    priority: "high",
+    createdAt: new Date("2025-05-20")
+  },
+  {
+    title: "Typo in About Us page",
+    reportedBy: "Mani",
+    status: "in progress",
+    priority: "low",
+    createdAt: new Date("2025-05-19")
+  },
+  {
+    title: "Broken link on homepage",
+    reportedBy: "Deepa",
+    status: "open",
+    priority: "medium",
+    createdAt: new Date("2025-05-18")
+  }
+])
+------Task 3: Query all bugs with status: "open" and priority: "high"------
+
+db.bugs.find({
+  status: "open",
+  priority: "high"
+})
+
+------Task 4: Update the status of a specific bug to "closed"------
+
+db.bugs.updateOne(
+  { title: "Login button unresponsive" },
+  { $set: { status: "closed" } }
+)
+
+------Task 5: Delete the bug reported by "Test User"------
+
+db.bugs.deleteOne({ reportedBy: "Test User" })
+
