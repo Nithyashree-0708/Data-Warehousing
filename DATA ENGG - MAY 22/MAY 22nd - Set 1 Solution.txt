@@ -1,0 +1,148 @@
+--------MongoDB Schema & Relationships Exercise Script--------
+
+~~~Section 1: Working with Schemas & Data Types~~~
+
+use trainingdb
+db.employees.insertMany([
+ {
+ name: "Nithya",
+ age: 28,
+ isManager: true,
+ skills: ["JavaScript", "Node.js", "MongoDB"],
+ joiningDate: new Date("2023-03-15"),
+ profile: {
+ linkedin: "linkedin.com/nithya",
+ portfolio: "nithya.dev"
+ }
+ },
+ {
+ name: "Vivek",
+ age: 32,
+ isManager: false,
+ skills: ["Python", "Pandas"],
+ joiningDate: new Date("2022-10-10"),
+ profile: {
+ linkedin: "linkedin.com/vivek",
+ portfolio: "vivek.dev"
+ }
+ },
+{
+ name: "Dhruv",
+ age: 30,
+ isManager: true,
+ skills: ["Java", "Spring", "Hibernate", "SQL"],
+ joiningDate: new Date("2023-07-01"),
+ profile: {
+ linkedin: "linkedin.com/dhruv",
+ portfolio: "dhruv.dev"
+ }
+ },
+ {
+ name: "Adi",
+ age: 25,
+ isManager: false,
+ skills: ["React", "CSS", "HTML"],
+ joiningDate: new Date("2024-01-10"),
+ profile: {
+ linkedin: "linkedin.com/adi",
+ portfolio: "adi.dev"
+ }
+ }
+]);
+db.employees.find({
+skills: { $size: { $gt: 2 } },
+ joiningDate: { $gt: new Date("2023-01-01") }
+});
+db.employees.updateOne({ name: "Nithya" }, { $set: { rating: 4.5 } });
+db.employees.find({ rating: { $type: "double" } });
+db.employees.find({}, { _id: 0, name: 1, skills: 1 });
+
+~~~Section 2: One-to-One (Embedded)~~~
+
+use schooldb
+db.students.insertMany([
+ {
+ name: "Nithya",
+ guardian: { name: "Deepa", phone: "1234567890", relation: "Mother" }
+ },
+ {
+ name: "Hashi",
+ guardian: { name: "Anand", phone: "2345678901", relation: "Father" }
+ },
+ {
+ name: "Riya",
+ guardian: { name: "Latha", phone: "3456789012", relation: "Mother" }
+ }
+]);
+db.students.find({ "guardian.relation": "Mother" });
+db.students.updateOne({ name: "Nithya" }, { $set: { "guardian.phone": "9999999999" } });
+
+~~~Section 3: One-to-Many (Embedded)~~~
+
+db.teachers.insertMany([
+ {
+ name: "Mr. Smith",
+ classes: ["Math", "Physics"]
+ },
+ {
+ name: "Mrs. Taylor",
+ classes: ["Biology", "Chemistry"]
+ }
+]);
+db.teachers.find({ classes: "Physics" });
+db.teachers.updateOne({ name: "Mr. Smith" }, { $addToSet: { classes: "Robotics" } });
+db.teachers.updateOne({ name: "Mr. Smith" }, { $pull: { classes: "Math" } });
+
+~~~Section 4: One-to-Many (Referenced)~~~
+
+use academia
+db.courses.insertMany([
+ { _id: ObjectId("6651a11223aa111111111111"), title: "Machine Learning", credits: 4 },
+ { _id: ObjectId("6651a11223aa111111111112"), title: "Database Systems", credits: 3 }
+]);
+db.students.insertMany([
+{ name: "Deepa", enrolledCourse: ObjectId("6651a11223aa111111111111") },
+ { name: "Laksh", enrolledCourse: ObjectId("6651a11223aa111111111112") }
+]);
+db.students.find({ enrolledCourse: ObjectId("6651a11223aa111111111111") });
+db.courses.find({ _id: ObjectId("6651a11223aa111111111111") });
+
+~~~Section 5: $lookup (Join in Aggregation)~~~
+
+db.students.aggregate([
+ {
+ $lookup: {
+ from: "courses",
+ localField: "enrolledCourse",
+ foreignField: "_id",
+ as: "courseInfo"
+ }
+ },
+ { $unwind: "$courseInfo" },
+ {
+ $project: {
+ _id: 0,
+ name: 1,
+ courseTitle: "$courseInfo.title"
+ }
+ }
+]
+db.students.aggregate([
+ {
+ $lookup: {
+ from: "courses",
+ localField: "enrolledCourse",
+ foreignField: "_id",
+ as: "courseInfo"
+ }
+ },
+ { $unwind: "$courseInfo" },
+ { $match: { "courseInfo.title": "Machine Learning" } },
+ {
+ $project: {
+ _id: 0,
+ name: 1,
+ courseTitle: "$courseInfo.title"
+ }
+ }
+]);

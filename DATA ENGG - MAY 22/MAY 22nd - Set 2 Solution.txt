@@ -1,0 +1,95 @@
+
+-------MongoDB Exercise Set #2:-------
+ 
+-------Project & Task Tracker-------
+
+~~~Section 1: Basic Document Modeling & Insertion~~~
+
+use taskmanager;
+// 1. Insert users
+db.users.insertMany([
+ { name: "Nithya", email: "nithya@mail.com", role: "admin", active: true },
+ { name: "Vikki", email: "vikki@mail.com", role: "developer", active: true },
+ { name: "Carol", email: "carol@mail.com", role: "manager", active: false }
+]);
+// 2. Insert projects
+const user = db.users.findOne({ name: "Nithya" });
+db.projects.insertMany([
+ {
+ title: "Website Redesign",
+ description: "Redesign the company website",
+ startDate: new Date("2024-05-01"),
+ status: "active",
+ createdBy: { _id: user._id, name: user.name }
+ },
+ {
+ title: "Mobile App",
+ description: "Build a cross-platform app",
+ startDate: new Date("2024-03-15"),
+ status: "completed",
+ createdBy: { _id: user._id, name: user.name }
+ }
+]);
+// 3. Insert tasks
+const project1 = db.projects.findOne({ title: "Website Redesign" });
+const project2 = db.projects.findOne({ title: "Mobile App" });
+const dev = db.users.findOne({ role: "developer" });
+const taskData = [
+ { title: "Design UI", assignedTo: dev._id, projectId: project1._id, priority: "high",
+dueDate: new Date("2024-06-01"), status: "in progress" },
+ { title: "Setup backend", assignedTo: dev._id, projectId: project1._id, priority:
+"medium", dueDate: new Date("2024-06-05"), status: "not started" },
+ { title: "Deploy website", assignedTo: dev._id, projectId: project1._id, priority:
+"high", dueDate: new Date("2024-06-15"), status: "not started" },
+ { title: "Create login screen", assignedTo: dev._id, projectId: project2._id,
+priority: "low", dueDate: new Date("2024-05-10"), status: "completed" },
+ { title: "Setup database", assignedTo: dev._id, projectId: project2._id, priority:
+"high", dueDate: new Date("2024-05-20"), status: "in progress" }
+];
+db.tasks.insertMany(taskData);
+
+~~~Section 2: Filtering & Querying~~~
+
+db.tasks.find({ priority: "high", status: { $ne: "completed" } });
+db.users.find({ role: "developer", active: true });
+db.tasks.find({ assignedTo: dev._id });
+const today = new Date();
+const past30 = new Date(today.setDate(today.getDate() - 30));
+db.projects.find({ startDate: { $gte: past30 } });
+
+~~~Section 3: Update Operations~~~
+
+db.tasks.updateOne({ title: "Design UI" }, { $set: { status: "completed" } });
+db.users.updateOne({ name: "Vikki" }, { $set: { role: "teamLead" } });
+db.tasks.updateOne({ title: "Setup backend" }, { $set: { tags: ["urgent", "frontend"] }
+});
+
+~~~Section 4: Array and Subdocument Operations~~~
+
+db.tasks.updateOne({ title: "Setup backend" }, { $addToSet: { tags: "UI" } });
+db.tasks.updateOne({ title: "Setup backend" }, { $pull: { tags: "frontend" } });
+db.projects.updateOne({ title: "Website Redesign" }, { $inc: { progress: 10 } });
+
+~~~Section 5: Aggregation & Lookup~~~
+
+db.tasks.aggregate([
+ { $lookup: { from: "users", localField: "assignedTo", foreignField: "_id", as:
+"assignee" } },
+ { $unwind: "$assignee" },
+ { $project: { title: 1, assigneeName: "$assignee.name" } }
+]);
+db.tasks.aggregate([
+ { $lookup: { from: "projects", localField: "projectId", foreignField: "_id", as:
+"project" } },
+ { $unwind: "$project" },
+ { $match: { "project.status": "active" } }
+]);
+db.tasks.aggregate([
+ { $group: { _id: "$status", count: { $sum: 1 } } }
+]);
+db.tasks.aggregate([
+ { $match: {} },
+ { $sort: { dueDate: 1 } },
+ { $limit: 3 },
+ { $project: { title: 1, dueDate: 1 } }
+]);
