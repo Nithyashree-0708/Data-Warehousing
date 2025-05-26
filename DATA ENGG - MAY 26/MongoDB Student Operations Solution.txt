@@ -1,0 +1,199 @@
+----MONGODB Student Operations----
+
+Collection: students
+
+----CRUD Operations----
+
+// Insert a new student //
+
+db.students.insertOne({
+  name: "Sara Ali",
+  age: 22,
+  gender: "Female",
+  department: "Mathematics",
+  courses: [
+    { name: "Algebra", score: 88 },
+    { name: "Calculus", score: 92 }
+  ],
+  address: {
+    city: "Mumbai",
+    state: "Maharashtra",
+    pincode: 400001
+  },
+  enrollmentDate: ISODate("2024-09-01T00:00:00Z"),
+  isActive: true
+})
+
+// Update score for "Python" course //
+
+db.students.updateOne(
+  { name: "Ayaan Khan", "courses.name": "Python" },
+  { $set: { "courses.$.score": 95 } }
+)
+
+// Delete student named "John Doe" //
+
+db.students.deleteOne({ name: "John Doe" })
+
+// Find all students in "Computer Science" //
+
+db.students.find({ department: "Computer Science" })
+
+----Query Operators----
+
+// Age greater than 20 //
+
+db.students.find({ age: { $gt: 20 } })
+
+// Enrolled between two dates //
+
+db.students.find({
+  enrollmentDate: {
+    $gte: ISODate("2024-07-01T00:00:00Z"),
+    $lte: ISODate("2024-09-01T00:00:00Z")
+  }
+})
+
+// Department in CS or Math //
+
+db.students.find({
+  department: { $in: ["Computer Science", "Mathematics"] }
+})
+
+// Not in Mechanical department //
+
+db.students.find({
+  department: { $ne: "Mechanical" }
+})
+
+// Any course score > 80 //
+
+db.students.find({
+  "courses.score": { $gt: 80 }
+})
+
+----Aggregation Framework----
+
+// Group by department and count //
+
+db.students.aggregate([
+  { $group: { _id: "$department", count: { $sum: 1 } } }
+])
+
+// Average age per department //
+
+db.students.aggregate([
+  { $group: { _id: "$department", avgAge: { $avg: "$age" } } }
+])
+
+
+// Sort by total course score //
+
+db.students.aggregate([
+  {
+    $project: {
+      name: 1,
+      totalScore: { $sum: "$courses.score" }
+    }
+  },
+  { $sort: { totalScore: -1 } }
+])
+
+// Filter active students before aggregation //
+
+db.students.aggregate([
+  { $match: { isActive: true } },
+  {
+    $group: {
+      _id: "$department",
+      count: { $sum: 1 }
+    }
+  }
+])
+
+// Unique cities from address //
+
+db.students.aggregate([
+  {
+    $group: {
+      _id: "$address.city"
+    }
+  }
+])
+
+----Projections----
+
+// Show name, department, city //
+
+db.students.find({}, {
+  name: 1,
+  department: 1,
+  "address.city": 1
+})
+
+// Exclude _id field //
+
+db.students.find({}, {
+  _id: 0,
+  name: 1,
+  department: 1
+})
+
+// Show name and total score //
+
+db.students.aggregate([
+  {
+    $project: {
+      name: 1,
+      totalScore: { $sum: "$courses.score" }
+    }
+  }
+])
+
+----Embedded Documents----
+
+// Find where address.city = "Hyderabad" //
+
+db.students.find({ "address.city": "Hyderabad" })
+
+// Update pincode in address //
+
+db.students.updateOne(
+  { name: "Ayaan Khan" },
+  { $set: { "address.pincode": 500033 } }
+)
+
+// Add landmark field to address //
+
+db.students.updateMany(
+  {},
+  { $set: { "address.landmark": "Near Bus Stop" } }
+)
+
+----Array Operations----
+
+// Add new course "Node.js" //
+
+db.students.updateOne(
+  { name: "Ayaan Khan" },
+  { $push: { courses: { name: "Node.js", score: 89 } } }
+)
+
+// Remove course by name "MongoDB" //
+
+db.students.updateOne(
+  { name: "Ayaan Khan" },
+  { $pull: { courses: { name: "MongoDB" } } }
+)
+
+// Find students with both Python and MongoDB //
+
+db.students.find({
+  "courses.name": { $all: ["Python", "MongoDB"] }
+})
+
+// Use $elemMatch for MongoDB score > 80 //
+
+db.students.find({
+  courses: { $elemMatch: { name: "MongoDB", score: { $gt: 80 } } }
+})
