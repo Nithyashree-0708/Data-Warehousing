@@ -1,0 +1,15 @@
+{
+    "location": {
+        "name": "Chennai",
+        "region": "Tamil Nadu",
+        "country": "India"
+    },
+    "current": {
+        "temperature": 33,
+        "weather_descriptions": [
+            "Partly cloudy"
+        ],
+        "humidity": 60,
+        "wind_speed": 20
+    }
+}
