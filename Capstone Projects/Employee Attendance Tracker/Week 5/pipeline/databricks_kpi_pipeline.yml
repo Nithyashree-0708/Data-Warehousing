@@ -1,0 +1,26 @@
+trigger:
+  branches:
+    include:
+      - main
+
+schedules:
+  - cron: "0 3 * * 1" 
+    displayName: Weekly KPI ETL
+    branches:
+      include:
+        - main
+    always: true
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+
+  - script: |
+      pip install databricks-cli
+      databricks fs cp kpi_pipeline.py dbfs:/Workspace/kpi_pipeline.py --overwrite
+      databricks jobs create --json-file job_definition.json
+    displayName: "Run KPI Pipeline on Databricks"
